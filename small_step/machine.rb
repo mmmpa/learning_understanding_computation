@@ -8,8 +8,6 @@ module Base
   end
 end
 
-
-
 class Machine < Struct.new(:expression, :env)
   def step
     self.expression = expression.reduce(env)

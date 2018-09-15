@@ -1,3 +1,5 @@
+require './small_step/machine'
+
 class Number < Struct.new(:value)
   include Base
 
