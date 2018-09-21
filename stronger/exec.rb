@@ -114,3 +114,39 @@ p npda.accepts?('baab')
 p npda.accepts?('baaab')
 p npda.accepts?('abba')
 p npda.accepts?('abbba')
+
+p :lexical
+
+p LexicalAnalyzer.new('y = x * 7').analyze
+p LexicalAnalyzer.new('while (x < 10) { x = x * 3}').analyze
+p LexicalAnalyzer.new('if (x < 10) { y = true; x = 0 } else { do-nothing }').analyze
+
+symbol_rules = [
+  PDARule.new(2, nil, 2, 'S', ['W']),
+  PDARule.new(2, nil, 2, 'S', ['A']),
+
+  PDARule.new(2, nil, 2, 'W', %w[w ( E ) { S }]),
+  PDARule.new(2, nil, 2, 'A', %w[v = E]),
+  PDARule.new(2, nil, 2, 'E', %w[L]),
+
+  PDARule.new(2, nil, 2, 'L', %w[M < L]),
+  PDARule.new(2, nil, 2, 'L', %w[M]),
+
+  PDARule.new(2, nil, 2, 'M', %w[T * M]),
+  PDARule.new(2, nil, 2, 'M', %w[T]),
+
+  PDARule.new(2, nil, 2, 'T', %w[n]),
+  PDARule.new(2, nil, 2, 'T', %w[v]),
+]
+tokens_rules = LexicalAnalyzer::GRAMMAR.map do |rule|
+  PDARule.new(2, rule[:token], 2, rule[:token], [])
+end
+start_rule = PDARule.new(1, nil, 2, '$', %w[S $])
+stop_rule = PDARule.new(2, nil, 3, '$', %w[$])
+
+rulebook = NPDARulebook.new([start_rule, stop_rule] + symbol_rules + tokens_rules)
+npda = NPDADesign.new(1, '$', [3], rulebook)
+
+p token_string = LexicalAnalyzer.new('while (x < 10) { x = x * 3}').analyze.join
+p npda.accepts?(token_string)
+p npda.accepts?(token_string + ')')
